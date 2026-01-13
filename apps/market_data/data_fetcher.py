@@ -1,6 +1,6 @@
 import akshare as ak
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, date
 import logging
 import time
 
@@ -25,11 +25,11 @@ class AkshareDataFetcher:
             if df.empty:
                 return []
 
-            # 标准化列名
-            df.columns = ['date', 'open', 'close', 'high', 'low', 'volume', 'amount', 'amplitude', 'change_pct', 'change_amount', 'turnover']
+            # 标准化列名 - akshare返回12列
+            df.columns = ['date', 'stock_code', 'open', 'close', 'high', 'low', 'volume', 'amount', 'amplitude', 'change_pct', 'change_amount', 'turnover']
 
             return [{
-                'trade_date': datetime.strptime(row['date'], '%Y-%m-%d').date(),
+                'trade_date': row['date'] if isinstance(row['date'], date) else datetime.strptime(row['date'], '%Y-%m-%d').date(),
                 'open_price': float(row['open']),
                 'high_price': float(row['high']),
                 'low_price': float(row['low']),

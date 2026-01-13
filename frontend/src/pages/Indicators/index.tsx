@@ -60,7 +60,7 @@ export default function Indicators() {
     queryKey: ['indicators'],
     queryFn: async () => {
       const response = await apiClient.get('/indicators/');
-      return response.data;
+      return response.data.results || response.data;
     },
   });
 
@@ -68,7 +68,7 @@ export default function Indicators() {
     queryKey: ['instruments'],
     queryFn: async () => {
       const response = await apiClient.get('/instruments/');
-      return response.data;
+      return response.data.results || response.data;
     },
   });
 

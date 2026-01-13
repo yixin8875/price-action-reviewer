@@ -22,9 +22,9 @@ export default function Dashboard() {
           apiClient.get('/trades/'),
         ]);
         setStats({
-          total_instruments: instruments.data.length,
-          total_reviews: reviews.data.length,
-          total_trades: trades.data.length,
+          total_instruments: (instruments.data.results || instruments.data).length,
+          total_reviews: (reviews.data.results || reviews.data).length,
+          total_trades: (trades.data.results || trades.data).length,
         });
       } catch (error) {
         console.error('Failed to fetch stats:', error);

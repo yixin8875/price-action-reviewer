@@ -28,13 +28,15 @@ export interface Instrument {
 export interface KLine {
   id: number;
   instrument: number;
-  timestamp: string;
-  open: string;
-  high: string;
-  low: string;
-  close: string;
+  trade_date: string;
+  trade_time?: string;
+  open_price: string;
+  high_price: string;
+  low_price: string;
+  close_price: string;
   volume: string;
-  timeframe: '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w' | '1M';
+  amount?: string;
+  period: '1m' | '5m' | '15m' | '30m' | '1h' | '1d' | '1w' | '1M';
 }
 
 export interface Indicator {

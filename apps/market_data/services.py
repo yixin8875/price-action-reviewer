@@ -94,6 +94,11 @@ class MarketDataService:
 
             end_date = datetime.now().strftime('%Y-%m-%d')
 
+            # 如果开始日期大于结束日期，说明数据已是最新
+            if start_date > end_date:
+                logger.info(f"{instrument.symbol} 数据已是最新，无需更新")
+                return 0
+
             return self.import_kline_data(instrument_id, start_date, end_date)
         except Exception as e:
             logger.error(f"更新最新数据失败: {e}")

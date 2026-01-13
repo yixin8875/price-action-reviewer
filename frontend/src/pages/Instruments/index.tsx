@@ -21,17 +21,60 @@ import type { Instrument } from '../../types';
 
 export default function Instruments() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [marketType, setMarketType] = useState('all');
   const [syncDays, setSyncDays] = useState(30);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [validationError, setValidationError] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  const { data: instruments = [], isLoading } = useQuery<Instrument[]>({
+  // 新标的表单数据
+  const [newInstrument, setNewInstrument] = useState({
+    symbol: '',
+    name: '',
+    market_type: 'STOCK',
+    exchange: 'SSE',
+  });
+
+  // 编辑标的表单数据
+  const [editInstrument, setEditInstrument] = useState<Instrument | null>(null);
+
+  const { data: instruments = [], isLoading, refetch } = useQuery<Instrument[]>({
     queryKey: ['instruments'],
     queryFn: async () => {
       const response = await apiClient.get('/instruments/');
-      return response.data;
+      return response.data.results || response.data;
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async (data: typeof newInstrument) => {
+      return apiClient.post('/instruments/', data);
+    },
+    onSuccess: () => {
+      setSnackbar({ open: true, message: '标的添加成功', severity: 'success' });
+      setAddDialogOpen(false);
+      setNewInstrument({ symbol: '', name: '', market_type: 'STOCK', exchange: 'SSE' });
+      refetch();
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: '标的添加失败', severity: 'error' });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: async (data: Instrument) => {
+      return apiClient.put(`/instruments/${data.id}/`, data);
+    },
+    onSuccess: () => {
+      setSnackbar({ open: true, message: '标的更新成功', severity: 'success' });
+      setEditDialogOpen(false);
+      setEditInstrument(null);
+      refetch();
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: '标的更新失败', severity: 'error' });
     },
   });
 
@@ -70,17 +113,55 @@ export default function Instruments() {
     }
   };
 
+  const handleAddInstrument = () => {
+    setValidationError('');
+
+    if (!newInstrument.symbol || !newInstrument.name) {
+      setValidationError('代码和名称不能为空');
+      return;
+    }
+
+    addMutation.mutate(newInstrument);
+  };
+
+  const handleEditInstrument = () => {
+    setValidationError('');
+
+    if (!editInstrument || !editInstrument.symbol || !editInstrument.name) {
+      setValidationError('代码和名称不能为空');
+      return;
+    }
+
+    editMutation.mutate(editInstrument);
+  };
+
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'symbol', headerName: '代码', width: 130 },
     { field: 'name', headerName: '名称', width: 200 },
     { field: 'exchange', headerName: '交易所', width: 130 },
-    { field: 'instrument_type', headerName: '类型', width: 130 },
+    { field: 'market_type', headerName: '类型', width: 130 },
     {
       field: 'is_active',
       headerName: '状态',
       width: 100,
       valueGetter: (value) => (value ? '活跃' : '停用'),
+    },
+    {
+      field: 'actions',
+      headerName: '操作',
+      width: 100,
+      renderCell: (params) => (
+        <Button
+          size="small"
+          onClick={() => {
+            setEditInstrument(params.row);
+            setEditDialogOpen(true);
+          }}
+        >
+          编辑
+        </Button>
+      ),
     },
   ];
 
@@ -96,7 +177,7 @@ export default function Instruments() {
           >
             批量同步
           </Button>
-          <Button variant="contained" startIcon={<Add />}>
+          <Button variant="contained" startIcon={<Add />} onClick={() => setAddDialogOpen(true)}>
             添加标的
           </Button>
         </Box>
@@ -172,6 +253,140 @@ export default function Instruments() {
             disabled={syncMutation.isPending}
           >
             {syncMutation.isPending ? <CircularProgress size={24} /> : '开始同步'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={addDialogOpen} onClose={() => setAddDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>添加标的</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+            {validationError && (
+              <Alert severity="error" onClose={() => setValidationError('')}>
+                {validationError}
+              </Alert>
+            )}
+            <TextField
+              label="代码"
+              value={newInstrument.symbol}
+              onChange={(e) => setNewInstrument({ ...newInstrument, symbol: e.target.value })}
+              fullWidth
+              required
+              placeholder="例如: 000001"
+            />
+            <TextField
+              label="名称"
+              value={newInstrument.name}
+              onChange={(e) => setNewInstrument({ ...newInstrument, name: e.target.value })}
+              fullWidth
+              required
+              placeholder="例如: 平安银行"
+            />
+            <TextField
+              select
+              label="市场类型"
+              value={newInstrument.market_type}
+              onChange={(e) => setNewInstrument({ ...newInstrument, market_type: e.target.value })}
+              fullWidth
+            >
+              <MenuItem value="STOCK">股票</MenuItem>
+              <MenuItem value="FUTURES">期货</MenuItem>
+            </TextField>
+            <TextField
+              select
+              label="交易所"
+              value={newInstrument.exchange}
+              onChange={(e) => setNewInstrument({ ...newInstrument, exchange: e.target.value })}
+              fullWidth
+            >
+              <MenuItem value="SSE">上海证券交易所</MenuItem>
+              <MenuItem value="SZSE">深圳证券交易所</MenuItem>
+              <MenuItem value="CFFEX">中国金融期货交易所</MenuItem>
+              <MenuItem value="SHFE">上海期货交易所</MenuItem>
+              <MenuItem value="DCE">大连商品交易所</MenuItem>
+              <MenuItem value="CZCE">郑州商品交易所</MenuItem>
+            </TextField>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)}>取消</Button>
+          <Button
+            onClick={handleAddInstrument}
+            variant="contained"
+            disabled={addMutation.isPending}
+          >
+            {addMutation.isPending ? <CircularProgress size={24} /> : '添加'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>编辑标的</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+            {validationError && (
+              <Alert severity="error" onClose={() => setValidationError('')}>
+                {validationError}
+              </Alert>
+            )}
+            <TextField
+              label="代码"
+              value={editInstrument?.symbol || ''}
+              onChange={(e) => setEditInstrument(editInstrument ? { ...editInstrument, symbol: e.target.value } : null)}
+              fullWidth
+              required
+            />
+            <TextField
+              label="名称"
+              value={editInstrument?.name || ''}
+              onChange={(e) => setEditInstrument(editInstrument ? { ...editInstrument, name: e.target.value } : null)}
+              fullWidth
+              required
+            />
+            <TextField
+              select
+              label="市场类型"
+              value={editInstrument?.market_type || 'STOCK'}
+              onChange={(e) => setEditInstrument(editInstrument ? { ...editInstrument, market_type: e.target.value } : null)}
+              fullWidth
+            >
+              <MenuItem value="STOCK">股票</MenuItem>
+              <MenuItem value="FUTURES">期货</MenuItem>
+            </TextField>
+            <TextField
+              select
+              label="交易所"
+              value={editInstrument?.exchange || 'SSE'}
+              onChange={(e) => setEditInstrument(editInstrument ? { ...editInstrument, exchange: e.target.value } : null)}
+              fullWidth
+            >
+              <MenuItem value="SSE">上海证券交易所</MenuItem>
+              <MenuItem value="SZSE">深圳证券交易所</MenuItem>
+              <MenuItem value="CFFEX">中国金融期货交易所</MenuItem>
+              <MenuItem value="SHFE">上海期货交易所</MenuItem>
+              <MenuItem value="DCE">大连商品交易所</MenuItem>
+              <MenuItem value="CZCE">郑州商品交易所</MenuItem>
+            </TextField>
+            <TextField
+              select
+              label="状态"
+              value={editInstrument?.is_active ? 'true' : 'false'}
+              onChange={(e) => setEditInstrument(editInstrument ? { ...editInstrument, is_active: e.target.value === 'true' } : null)}
+              fullWidth
+            >
+              <MenuItem value="true">活跃</MenuItem>
+              <MenuItem value="false">停用</MenuItem>
+            </TextField>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>取消</Button>
+          <Button
+            onClick={handleEditInstrument}
+            variant="contained"
+            disabled={editMutation.isPending}
+          >
+            {editMutation.isPending ? <CircularProgress size={24} /> : '保存'}
           </Button>
         </DialogActions>
       </Dialog>

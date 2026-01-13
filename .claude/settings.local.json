@@ -24,7 +24,11 @@
       "Bash(npm install @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-data-grid @mui/x-date-pickers @tanstack/react-query axios react-router-dom echarts echarts-for-react date-fns zustand)",
       "Bash(test:*)",
       "Bash(npm run build)",
-      "Bash(npm install react-hook-form @hookform/resolvers zod)"
+      "Bash(npm install react-hook-form @hookform/resolvers zod)",
+      "Bash(source:*)",
+      "Bash(python manage.py show_urls:*)",
+      "Bash(python:*)",
+      "Bash(.venv/bin/pip install:*)"
     ]
   }
 }

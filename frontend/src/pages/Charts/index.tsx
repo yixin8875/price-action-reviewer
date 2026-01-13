@@ -40,9 +40,10 @@ export default function Charts() {
   const fetchInstruments = async () => {
     try {
       const response = await apiClient.get('/instruments/');
-      setInstruments(response.data);
-      if (response.data.length > 0) {
-        setSelectedInstrument(response.data[0].id);
+      const data = response.data.results || response.data;
+      setInstruments(data);
+      if (data.length > 0) {
+        setSelectedInstrument(data[0].id);
       }
     } catch (error) {
       console.error('Failed to fetch instruments:', error);
@@ -66,8 +67,8 @@ export default function Charts() {
   const fetchKlines = async (instrumentId: number) => {
     setLoading(true);
     try {
-      const response = await apiClient.get(`/klines/?instrument=${instrumentId}`);
-      setKlines(response.data);
+      const response = await apiClient.get(`/klines/?instrument=${instrumentId}&page_size=100`);
+      setKlines(response.data.results || response.data);
     } catch (error) {
       console.error('Failed to fetch klines:', error);
     } finally {

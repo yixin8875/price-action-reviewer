@@ -16,11 +16,11 @@ export default function KLineChart({ data, indicators = {} }: KLineChartProps) {
     const chart = echarts.init(chartRef.current);
 
     const chartData = data.map((item) => [
-      item.timestamp,
-      parseFloat(item.open),
-      parseFloat(item.close),
-      parseFloat(item.low),
-      parseFloat(item.high),
+      item.trade_date,
+      parseFloat(item.open_price),
+      parseFloat(item.close_price),
+      parseFloat(item.low_price),
+      parseFloat(item.high_price),
       parseFloat(item.volume),
     ]);
 

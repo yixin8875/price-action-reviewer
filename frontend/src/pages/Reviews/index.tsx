@@ -27,7 +27,7 @@ export default function Reviews() {
   const fetchReviews = async () => {
     try {
       const response = await apiClient.get('/reviews/');
-      setReviews(response.data);
+      setReviews(response.data.results || response.data);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
     } finally {
