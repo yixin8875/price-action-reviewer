@@ -1,0 +1,115 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'admin/css/custom_admin.css' %}">
+<style>
+    .chart-container {
+        width: 100%;
+        height: 600px;
+        margin: 20px 0;
+    }
+    .info-panel {
+        background: #f8f9fa;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 5px;
+    }
+    .info-panel h3 {
+        margin-top: 0;
+    }
+    .level-item {
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .level-support {
+        color: #14b143;
+        font-weight: bold;
+    }
+    .level-resistance {
+        color: #ef232a;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+
+    <div class="info-panel">
+        <h3>复盘信息</h3>
+        <p><strong>交易日期:</strong> {{ review.trade_date }}</p>
+        <p><strong>复盘类型:</strong> {{ review.get_review_type_display }}</p>
+        <p><strong>市场阶段:</strong> {{ review.get_market_phase_display }}</p>
+        <p><strong>评分:</strong> {% if review.rating %}⭐{% for i in "x"|rjust:review.rating %}⭐{% endfor %}{% else %}-{% endif %}</p>
+        {% if review.analysis_notes %}
+        <p><strong>分析笔记:</strong></p>
+        <p>{{ review.analysis_notes|linebreaks }}</p>
+        {% endif %}
+    </div>
+
+    {% if support_resistance %}
+    <div class="info-panel">
+        <h3>关键价位</h3>
+        {% for level in support_resistance %}
+        <div class="level-item">
+            <span class="level-{{ level.level_type|lower }}">
+                {{ level.get_level_type_display }}: {{ level.price_level }}
+            </span>
+            (强度: {{ level.strength }}/5, 触及次数: {{ level.touch_count }})
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div id="kline-chart" class="chart-container"></div>
+
+    <div style="margin-top: 20px;">
+        <a href="{% url 'admin:review_reviewrecord_change' review.id %}" class="button">返回详情</a>
+        <a href="{% url 'admin:review_reviewrecord_changelist' %}" class="button">返回列表</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+    // 初始化图表
+    var chartDom = document.getElementById('kline-chart');
+    var myChart = echarts.init(chartDom);
+    var option = {{ chart_option|safe }};
+
+    // 添加支撑阻力位标记线
+    {% if support_resistance %}
+    var markLines = [];
+    {% for level in support_resistance %}
+    markLines.push({
+        yAxis: {{ level.price_level }},
+        lineStyle: {
+            color: '{% if level.level_type == "SUPPORT" %}#14b143{% else %}#ef232a{% endif %}',
+            type: 'dashed',
+            width: 2
+        },
+        label: {
+            formatter: '{{ level.get_level_type_display }}: {{ level.price_level }}'
+        }
+    });
+    {% endfor %}
+
+    if (option.series && option.series[0]) {
+        option.series[0].markLine = {
+            symbol: 'none',
+            data: markLines
+        };
+    }
+    {% endif %}
+
+    myChart.setOption(option);
+
+    // 响应式调整
+    window.addEventListener('resize', function() {
+        myChart.resize();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(tree:*)",
+      "Bash(python manage.py check:*)",
+      "Bash(python3:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(pip install:*)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(.venv/bin/python manage.py makemigrations:*)",
+      "Bash(.venv/bin/python manage.py migrate:*)"
+    ]
+  }
+}
