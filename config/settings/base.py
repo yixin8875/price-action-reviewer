@@ -14,8 +14,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
-    'unfold',
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -23,6 +21,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Third party apps
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'django_filters',
+    'drf_spectacular',
     'django_celery_beat',
     'django_celery_results',
 
@@ -36,6 +39,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -100,88 +104,60 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_RESULT_EXPIRES = 3600
 CELERY_TASK_TIME_LIMIT = 600
 
-# Django Unfold Configuration
-UNFOLD = {
-    "SITE_TITLE": "价格行为复盘系统",
-    "SITE_HEADER": "价格行为复盘专家系统",
-    "SITE_URL": "/",
-    "SITE_SYMBOL": "speed",
-    "SHOW_HISTORY": True,
-    "SHOW_VIEW_ON_SITE": True,
-    "COLORS": {
-        "primary": {
-            "50": "239 246 255",
-            "100": "219 234 254",
-            "200": "191 219 254",
-            "300": "147 197 253",
-            "400": "96 165 250",
-            "500": "59 130 246",
-            "600": "37 99 235",
-            "700": "29 78 216",
-            "800": "30 64 175",
-            "900": "30 58 138",
-            "950": "23 37 84",
-        },
-    },
-    "SIDEBAR": {
-        "show_search": True,
-        "show_all_applications": False,
-        "navigation": [
-            {
-                "title": "市场数据",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "标的管理",
-                        "icon": "trending_up",
-                        "link": lambda request: reverse_lazy("admin:market_data_instrument_changelist"),
-                    },
-                    {
-                        "title": "K线数据",
-                        "icon": "candlestick_chart",
-                        "link": lambda request: reverse_lazy("admin:market_data_kline_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": "技术分析",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "技术指标",
-                        "icon": "analytics",
-                        "link": lambda request: reverse_lazy("admin:technical_analysis_indicator_changelist"),
-                    },
-                    {
-                        "title": "形态识别",
-                        "icon": "pattern",
-                        "link": lambda request: reverse_lazy("admin:technical_analysis_pattern_changelist"),
-                    },
-                    {
-                        "title": "支撑阻力位",
-                        "icon": "show_chart",
-                        "link": lambda request: reverse_lazy("admin:technical_analysis_supportresistance_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": "复盘记录",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "复盘记录",
-                        "icon": "rate_review",
-                        "link": lambda request: reverse_lazy("admin:review_reviewrecord_changelist"),
-                    },
-                    {
-                        "title": "交易日志",
-                        "icon": "receipt_long",
-                        "link": lambda request: reverse_lazy("admin:review_tradelog_changelist"),
-                    },
-                ],
-            },
-        ],
-    },
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'MAX_PAGE_SIZE': 100,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
 
+# JWT Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+}
+
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# API Documentation Configuration
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Price Action Reviewer API',
+    'DESCRIPTION': '价格行为复盘系统 API 文档',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api/v1/',
+}
 

@@ -9,7 +9,22 @@
       "Bash(pip install:*)",
       "Bash(python manage.py makemigrations:*)",
       "Bash(.venv/bin/python manage.py makemigrations:*)",
-      "Bash(.venv/bin/python manage.py migrate:*)"
+      "Bash(.venv/bin/python manage.py migrate:*)",
+      "Bash(/Users/boohee/Documents/trae_projects/price-action-reviewer/.venv/bin/python:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(.venv/bin/python manage.py collectstatic:*)",
+      "Bash(.venv/bin/python manage.py check:*)",
+      "Bash(.venv/bin/python manage.py runserver:*)",
+      "Skill(ai)",
+      "Skill(ai:*)",
+      "Bash(/Users/boohee/Documents/trae_projects/price-action-reviewer/.venv/bin/pip install:*)",
+      "Bash(npm create vite:*)",
+      "Bash(npm install)",
+      "Bash(npm install @mui/material @mui/icons-material @emotion/react @emotion/styled @mui/x-data-grid @mui/x-date-pickers @tanstack/react-query axios react-router-dom echarts echarts-for-react date-fns zustand)",
+      "Bash(test:*)",
+      "Bash(npm run build)",
+      "Bash(npm install react-hook-form @hookform/resolvers zod)"
     ]
   }
 }
